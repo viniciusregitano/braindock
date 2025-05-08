@@ -1,0 +1,15 @@
+jupyterlab
+jupyter-ai
+llama-index
+faiss-cpu
+openai
+huggingface-hub
+neo4j
+prefect
+streamlit
+sentence-transformers
+pyarrow
+fastparquet
+matplotlib
+pandas
+scikit-learn

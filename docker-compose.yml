@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  jupyterlab:
+    build: ./services/jupyterlab
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/notebooks
+      - ./services/shared_module:/app
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
+    depends_on:
+      - faiss
+      - redis
+      - neo4j
+
+  superset:
+    image: apache/superset:latest
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=supersecret
+    build: ./services/superset
+    volumes:
+      - ./services/superset:/app/superset_home
+    depends_on:
+      - clickhouse
+
+  airbyte:
+    image: airbyte/airbyte:oss
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      - AIRBYTE_ROLE=dev
+    depends_on:
+      - clickhouse
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./models:/mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/test
+    volumes:
+      - neo4j_data:/data
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    volumes:
+      - minio_data:/data
+
+  faiss:
+    image: python:3.11-slim
+    container_name: faiss
+    command: tail -f /dev/null
+    volumes:
+      - ./vectorstore:/faiss
+
+  braindock-hub:
+    build: ./services/brainhub
+    ports:
+      - "8501:8501"
+    environment:
+      - IMPORT_REPO=${IMPORT_REPO}
+    volumes:
+      - ./services/shared_module:/app/shared_module
+
+  python-shell:
+    image: jupyterlab
+    container_name: python-shell
+    tty: true
+    stdin_open: true
+    command: bash
+    volumes:
+      - ./services/shared_module:/app
+      - ./notebooks:/app/notebooks
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
+      - USE_GPU=${USE_GPU}
+    depends_on:
+      - jupyterlab
+
+volumes:
+  clickhouse_data:
+  neo4j_data:
+  minio_data:
