@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   jupyterlab:
-    build: ./services/jupyterlab
+    build:
+      context: .
+      dockerfile: services/jupyterlab/Dockerfile
     image: braindock/jupyterlab:latest
     ports:
       - "8888:8888"
