@@ -29,14 +29,14 @@
 1. Clone o projeto:
 
 ```bash
-git clone https://github.com/seu-usuario/braindock.git
+git clone https://github.com/viniciusregitano/braindock.git
 cd braindock
 ```
 
 2. Edite o arquivo `.env` com seu repositório e chaves de API:
 
 ```
-IMPORT_REPO=https://github.com/seu-usuario/brain_graph_core.git
+IMPORT_REPO=https://github.com/seu-usuario/seu-repositorio.git
 OPENAI_API_KEY=...
 HUGGINGFACEHUB_API_TOKEN=...
 ```
@@ -85,6 +85,7 @@ docker exec -it python-shell bash
 - `services/brainhub/`: painel em Streamlit
 - `services/shared_module/`: onde será clonado o módulo principal do BrainGraph
 - `models/`, `data/`, `logs/`: diretórios de trabalho
+- `scripts/`: scripts, como adicionar os atalhos ao menu do sistema
 
 ---
 

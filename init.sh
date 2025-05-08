@@ -13,9 +13,11 @@ else
 fi
 
 # Clona o repositório principal do projeto se ainda não existir
-if [ ! -d "services/shared_module" ]; then
+if [ -n "$IMPORT_REPO" ] && [ ! -d "services/shared_module" ]; then
     echo "🔄 Clonando repositório: $IMPORT_REPO"
     git clone $IMPORT_REPO services/shared_module
+elif [ -z "$IMPORT_REPO" ]; then
+    echo "⚠️ Variável IMPORT_REPO não definida ou vazia. Pulando clonagem do repositório."
 fi
 
 # Instala dependências locais com poetry (ambiente nativo opcional)
@@ -26,13 +28,16 @@ if ! command -v poetry &> /dev/null; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-cd services/shared_module/brain_graph_core
+cd services/shared_module
 poetry install || pip install -e .
 cd -
 
 # Sobe os containers
 echo "🐳 Subindo containers com Docker Compose..."
 docker-compose up --build -d
+
+# Cria atalhos no sistema
+bash ./scripts/create_shortcuts.sh
 
 # Exibe os serviços
 echo "✅ BrainDock está rodando!"
