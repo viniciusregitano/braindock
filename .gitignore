@@ -1,0 +1,5 @@
+# Ignorar o arquivo .env
+.env
+
+# Ignorar notebooks na pasta notebooks/no_git
+notebooks/no_git/
