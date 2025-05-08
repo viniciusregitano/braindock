@@ -1,13 +1,12 @@
 #!/bin/bash
 
-echo "🔧 Criando atalhos do BrainDock..."
-
-# Caminho para atalhos
-TARGET_DIR="$HOME/.local/share/applications"
-mkdir -p "$TARGET_DIR"
+# Detecta a pasta da área de trabalho
+DESKTOP_DIR=$(xdg-user-dir DESKTOP)
+echo "🔧 Criando atalhos do BrainDock em $DESKTOP_DIR..."
+mkdir -p "$DESKTOP_DIR"
 
 # Atalho do painel Streamlit
-cat > "$TARGET_DIR/braindock-hub.desktop" <<EOF
+cat > "$DESKTOP_DIR/braindock-hub.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
 Name=BrainDock Hub
@@ -20,7 +19,7 @@ Categories=Development;
 EOF
 
 # Atalho para o Python Shell
-cat > "$TARGET_DIR/python-shell.desktop" <<EOF
+cat > "$DESKTOP_DIR/python-shell.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
 Name=Python Shell (BrainDock)
@@ -32,7 +31,7 @@ Type=Application
 Categories=Development;
 EOF
 
-chmod +x "$TARGET_DIR/braindock-hub.desktop"
-chmod +x "$TARGET_DIR/python-shell.desktop"
+chmod +x "$DESKTOP_DIR/braindock-hub.desktop"
+chmod +x "$DESKTOP_DIR/python-shell.desktop"
 
-echo "✅ Atalhos criados com sucesso em $TARGET_DIR"
+echo "✅ Atalhos criados com sucesso em $DESKTOP_DIR"

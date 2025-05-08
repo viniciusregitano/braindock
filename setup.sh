@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 echo "🚀 Iniciando setup do BrainDock..."
@@ -12,11 +11,13 @@ else
     exit 1
 fi
 
-# Clona o repositório principal do projeto se ainda não existir
-if [ -n "$IMPORT_REPO" ] && [ ! -d "services/shared_module" ]; then
-    echo "🔄 Clonando repositório: $IMPORT_REPO"
-    git clone $IMPORT_REPO services/shared_module
-elif [ -z "$IMPORT_REPO" ]; then
+# Clona repositório compartilhado se necessário
+if [ -n "$IMPORT_REPO" ]; then
+    if [ ! -d "services/shared/shared_module" ]; then
+        echo "🔄 Clonando repositório: $IMPORT_REPO"
+        git clone $IMPORT_REPO services/shared/shared_module
+    fi
+else
     echo "⚠️ Variável IMPORT_REPO não definida ou vazia. Pulando clonagem do repositório."
 fi
 
@@ -43,22 +44,30 @@ fi
 
 # Faz o build e sobe os containers
 echo "🐳 Fazendo build dos containers com Docker Compose..."
-docker-compose build --no-cache || { echo "❌ Falha ao fazer o build dos containers! Verifique os logs acima."; exit 1; }
+docker-compose build || { echo "❌ Falha ao fazer o build dos containers! Verifique os logs acima."; exit 1; }
 
-echo "🐳 Subindo containers com Docker Compose..."
-docker-compose up --build -d || { echo "❌ Falha ao subir os containers! Verifique os logs acima."; exit 1; }
 
-# Cria atalhos no sistema
+# Criar atalhos de sistema
 bash ./scripts/create_shortcuts.sh
 
-# Exibe os serviços
-echo "✅ BrainDock está rodando!"
-echo "🔗 Painel central: http://localhost:8501"
-echo "📊 Superset:        http://localhost:8088"
-echo "📦 Airbyte:         http://localhost:8000"
-echo "📈 MLflow:          http://localhost:5000"
-echo "🧠 Neo4j:           http://localhost:7474"
-echo "🧮 ClickHouse:      http://localhost:8123"
-echo "📁 MinIO:           http://localhost:9001"
-echo "📘 JupyterLab:      http://localhost:8888"
-echo "🐍 Python Shell:    docker exec -it python-shell bash"
+# Cria atalho de inicialização automática no boot com systemd user
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/braindock-start.service <<EOF
+[Unit]
+Description=Start BrainDock on user login
+After=network.target
+
+[Service]
+ExecStart=${PWD}/start.sh
+WorkingDirectory=${PWD}
+Restart=always
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reexec
+systemctl --user enable braindock-start.service
+
+echo "✅ Setup inicial completo! O BrainDock será iniciado automaticamente no login."
+echo "▶️ Você pode iniciar manualmente com: bash start.sh"

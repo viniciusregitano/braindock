@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   jupyterlab:
     build:
@@ -15,10 +13,6 @@ services:
       - JUPYTER_ENABLE_LAB=yes
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
-    depends_on:
-      - faiss
-      - redis
-      - neo4j
 
   superset:
     image: apache/superset:latest
@@ -56,6 +50,11 @@ services:
     ports:
       - "8123:8123"
       - "9000:9000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - clickhouse_data:/var/lib/clickhouse
 
@@ -66,6 +65,11 @@ services:
       - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - neo4j_data:/data
 
@@ -73,34 +77,46 @@ services:
     image: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
+      - "9100:9000"   # 🟡 aqui a porta externa 9100 → interna 9000
       - "9001:9001"
     environment:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=minio123
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - minio_data:/data
 
   faiss:
-    image: python:3.11-slim
+    image: braindock/jupyterlab:latest
     container_name: faiss
     command: tail -f /dev/null
     volumes:
       - ./vectorstore:/faiss
-
-    
+    depends_on:
+        - jupyterlab
 
   python-shell:
-    image: jupyterlab:latest
+    image: braindock/jupyterlab:latest
     container_name: python-shell
     tty: true
     stdin_open: true
     command: bash
+    healthcheck:
+      test: ["CMD", "true"]
     volumes:
       - ./services/shared_module:/app
       - ./notebooks:/app/notebooks
@@ -112,14 +128,15 @@ services:
       - jupyterlab
 
   braindock-hub:
-      image: jupyterlab:latest  # Reutiliza a imagem do python-shell
+      image: braindock/jupyterlab:latest  # Reutiliza a imagem do python-shell
       container_name: braindock-hub
-      command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+      command: streamlit run streamlit_app.py --server.port=8501 --server.enableXsrfProtection=false
       ports:
         - "8501:8501"
       volumes:
         - ./services/shared_module:/app/shared_module
-        - ./services/brainhub:/app/brainhub
+        - ./services/brainhub:/app
+      working_dir: /app
       environment:
         - OPENAI_API_KEY=${OPENAI_API_KEY}
         - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}

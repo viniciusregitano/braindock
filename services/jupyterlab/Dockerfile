@@ -14,7 +14,7 @@ RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 ARG SHARED_MODULE_PATH=../../services/shared_module
 RUN if [ -d "$SHARED_MODULE_PATH" ]; then \
         cp -r $SHARED_MODULE_PATH /home/jovyan/app && \
-        pip install -e /home/jovyan/app/brain_graph_core || true; \
+        pip install -e /home/jovyan/app/ || true; \
     fi
 
 EXPOSE 8888
