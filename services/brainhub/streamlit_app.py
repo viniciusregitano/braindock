@@ -2,18 +2,16 @@ import streamlit as st
 import os
 import subprocess
 
-st.set_page_config(page_title="BrainDock Hub", layout="centered")
-st.title("BrainDock Hub")
-
-st.markdown("""
-Este painel centraliza os principais serviços do ambiente BrainDock.
-Clique nos botões abaixo para abrir, iniciar ou parar os serviços conforme necessário.
-""")
-
 def get_status(service):
     try:
+        cid = subprocess.check_output(
+            ["docker-compose", "ps", "-q", service],
+            stderr=subprocess.DEVNULL
+        ).decode().strip()
+        if not cid:
+            return "⚪ não encontrado"
         result = subprocess.check_output(
-            ["docker", "inspect", "-f", "{{.State.Status}}", service],
+            ["docker", "inspect", "-f", "{{.State.Status}}", cid],
             stderr=subprocess.DEVNULL
         ).decode().strip()
         if result == "running":
@@ -25,7 +23,14 @@ def get_status(service):
     except:
         return "⚪ não encontrado"
 
-# Serviços ativos no init.sh
+st.set_page_config(page_title="BrainDock Hub", layout="centered")
+st.title("BrainDock Hub")
+
+st.markdown("""
+Este painel centraliza os principais serviços do ambiente BrainDock.
+Clique nos botões abaixo para abrir, iniciar ou parar os serviços conforme necessário.
+""")
+
 st.subheader("Acessar Serviços Ativos")
 
 if st.button("Abrir JupyterLab"):
@@ -37,26 +42,39 @@ if st.button("Abrir ClickHouse"):
 if st.button("Abrir MinIO"):
     st.markdown("[Abrir MinIO](http://localhost:9100)", unsafe_allow_html=True)
 
-# Serviços sob demanda
 st.subheader("Serviços Sob Demanda")
 
 def service_controls(name, label, port):
     status = get_status(name)
-    cols = st.columns([2, 2, 2, 3])
+    cols = st.columns([2, 2, 2, 2, 2])
     cols[0].markdown(f"**{label}**")
     cols[1].markdown(f"{status}")
 
-    if cols[2].button(f"Iniciar {label}"):
-        os.system(f"docker compose up -d {name}")
-        st.success(f"{label} iniciado.")
-    if cols[3].button(f"Parar {label}"):
-        os.system(f"docker compose stop {name}")
+    if cols[2].button(f"Iniciar", key=f"iniciar-{label}"):
+        try:
+            result = subprocess.run(
+                ["docker-compose", "up", "-d", name],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            st.success(f"{label} iniciado com sucesso.")
+            st.rerun()  # 👈 força atualização da interface
+        except subprocess.CalledProcessError as e:
+            st.error(f"Erro ao iniciar {label}:\n\n{e.stderr}")
+
+    if cols[3].button(f"Parar", key=f"parar-{name}"):
+        subprocess.Popen(["docker-compose", "stop", name])
         st.warning(f"{label} parado.")
+
     if status == "🟢 ativo":
-        st.markdown(f"[Abrir {label}](http://localhost:{port})", unsafe_allow_html=True)
+        cols[4].link_button("Abrir", f"http://localhost:{port}")
+    else:
+        cols[4].button(f"Abrir", key=f"abrir-{label}", disabled=True)
 
 service_controls("superset", "Superset", 8088)
-service_controls("airbyte", "Airbyte", 8000)
+# service_controls("airbyte", "Airbyte", 8000)
 service_controls("mlflow", "MLflow", 5000)
 service_controls("neo4j", "Neo4j", 7474)
 
@@ -65,7 +83,8 @@ st.divider()
 st.subheader("Utilitários")
 
 if st.button("Abrir Terminal Python (docker exec)"):
-    st.code("docker exec -it python-shell bash")
+    subprocess.Popen(["gnome-terminal", "--window", "--", "docker", "exec", "-it", "python-shell", "bash"])
+    st.success("Terminal aberto para o python-shell.")
 
 if st.button("Executar fluxo Prefect (Notebook)"):
     os.system("python workflows/run_notebook_flow.py")

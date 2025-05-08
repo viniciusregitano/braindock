@@ -42,10 +42,18 @@ else
     echo "⚠️ Módulo 'shared_module' não encontrado ou sem 'pyproject.toml'. Pulando instalação de dependências."
 fi
 
+echo "📦 Criando ambiente virtual do painel (./.venv-panel)..."
+python3 -m venv .venv-panel
+source .venv-panel/bin/activate
+pip install --upgrade pip
+export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+pip install streamlit prefect
+deactivate
+
+
 # Faz o build e sobe os containers
 echo "🐳 Fazendo build dos containers com Docker Compose..."
 docker-compose build || { echo "❌ Falha ao fazer o build dos containers! Verifique os logs acima."; exit 1; }
-
 
 # Criar atalhos de sistema
 bash ./scripts/create_shortcuts.sh

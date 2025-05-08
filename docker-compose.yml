@@ -28,22 +28,24 @@ services:
     depends_on:
       - clickhouse
 
-  airbyte:
-    image: airbyte/airbyte:oss
-    ports:
-      - "8000:8000"
-      - "8001:8001"
-    environment:
-      - AIRBYTE_ROLE=dev
-    depends_on:
-      - clickhouse
+  # airbyte:
+  #   container_name: airbyte
+  #   image: airbyte/airbyte-webapp:0.50.52
+  #   ports:
+  #     - "8000:8000"
+  #     - "8001:8001"
+  #   environment:
+  #     - AIRBYTE_ROLE=dev
+  #   depends_on:
+  #     - clickhouse
 
   mlflow:
     image: ghcr.io/mlflow/mlflow
     ports:
       - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
-      - ./models:/mlflow
+      - ./mlruns:/mlruns
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
 
@@ -66,9 +68,9 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/test
+      - NEO4J_AUTH=${NEO4J_AUTH}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7474"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -129,22 +131,22 @@ services:
     depends_on:
       - jupyterlab
 
-  braindock-hub:
-      image: braindock/jupyterlab:latest  # Reutiliza a imagem do python-shell
-      container_name: braindock-hub
-      command: streamlit run streamlit_app.py --server.port=8501 --server.enableXsrfProtection=false
-      ports:
-        - "8501:8501"
-      volumes:
-        - ./services/shared_module:/app/shared_module
-        - ./services/brainhub:/app
-      working_dir: /app
-      environment:
-        - OPENAI_API_KEY=${OPENAI_API_KEY}
-        - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
-        - IMPORT_REPO=${IMPORT_REPO}
-      depends_on:
-        - jupyterlab
+  # braindock-hub:
+  #     image: braindock/jupyterlab:latest  # Reutiliza a imagem do python-shell
+  #     container_name: braindock-hub
+  #     command: streamlit run streamlit_app.py --server.port=8501 --server.enableXsrfProtection=false
+  #     ports:
+  #       - "8501:8501"
+  #     volumes:
+  #       - ./services/shared_module:/app/shared_module
+  #       - ./services/brainhub:/app
+  #     working_dir: /app
+  #     environment:
+  #       - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #       - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
+  #       - IMPORT_REPO=${IMPORT_REPO}
+  #     depends_on:
+  #       - jupyterlab
 
 volumes:
   clickhouse_data:
