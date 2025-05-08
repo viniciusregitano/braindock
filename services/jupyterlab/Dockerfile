@@ -10,9 +10,12 @@ USER jovyan
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 
-# Instala módulo importado (se presente)
-COPY ../../services/shared_module /home/jovyan/app
-RUN pip install -e /home/jovyan/app/brain_graph_core || true
+# Verifica se o módulo compartilhado existe antes de copiá-lo
+ARG SHARED_MODULE_PATH=../../services/shared_module
+RUN if [ -d "$SHARED_MODULE_PATH" ]; then \
+        cp -r $SHARED_MODULE_PATH /home/jovyan/app && \
+        pip install -e /home/jovyan/app/brain_graph_core || true; \
+    fi
 
 EXPOSE 8888
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--NotebookApp.token=''"]

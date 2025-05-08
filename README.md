@@ -1,6 +1,7 @@
 # BrainDock - Infraestrutura para Ciência de Dados e IA Cognitiva
 
-**BrainDock** é um ambiente de trabalho modular e integrado que oferece tudo o que você precisa para desenvolver, testar e operar projetos de IA, ciência de dados, análise gráfica e raciocínio simbólico/vetorial. Ele foi pensado para ser simples de iniciar e poderoso o suficiente para escalar.
+**BrainDock** é um ambiente de trabalho modular e integrado que oferece ferramentas para desenvolver, testar e operar projetos de IA, ciência de dados, análise gráfica e raciocínio simbólico/vetorial. Ele foi pensado para ser simples de iniciar e poderoso o suficiente para escalar.
+Obs.: testado somente em Linux.
 
 ---
 

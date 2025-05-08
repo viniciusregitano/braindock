@@ -13,3 +13,6 @@ fastparquet
 matplotlib
 pandas
 scikit-learn
+scipy
+numpy
+pydantic

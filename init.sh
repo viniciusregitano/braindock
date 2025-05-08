@@ -8,7 +8,7 @@ echo "🚀 Iniciando setup do BrainDock..."
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 else
-    echo "Arquivo .env não encontrado!"
+    echo "❌ Arquivo .env não encontrado! Certifique-se de que ele está presente no diretório."
     exit 1
 fi
 
@@ -20,21 +20,33 @@ elif [ -z "$IMPORT_REPO" ]; then
     echo "⚠️ Variável IMPORT_REPO não definida ou vazia. Pulando clonagem do repositório."
 fi
 
-# Instala dependências locais com poetry (ambiente nativo opcional)
-echo "📦 Instalando dependências Python no host..."
-if ! command -v poetry &> /dev/null; then
-    echo "📥 Instalando Poetry..."
-    curl -sSL https://install.python-poetry.org | python3 -
-    export PATH="$HOME/.local/bin:$PATH"
+# Verifica se o requirements.txt existe antes de instalar dependências
+if [ -f "requirements.txt" ]; then
+    echo "📦 Instalando dependências Python no host..."
+    if ! command -v poetry &> /dev/null; then
+        echo "📥 Instalando Poetry..."
+        curl -sSL https://install.python-poetry.org | python3 -
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+else
+    echo "⚠️ Arquivo requirements.txt não encontrado. Pulando instalação de dependências."
 fi
 
-cd services/shared_module
-poetry install || pip install -e .
-cd -
+# Verifica se o módulo compartilhado existe antes de instalar dependências
+if [ -d "services/shared_module" ] && [ -f "services/shared_module/pyproject.toml" ]; then
+    cd services/shared_module
+    poetry install || pip install -e .
+    cd -
+else
+    echo "⚠️ Módulo 'shared_module' não encontrado ou sem 'pyproject.toml'. Pulando instalação de dependências."
+fi
 
-# Sobe os containers
+# Faz o build e sobe os containers
+echo "🐳 Fazendo build dos containers com Docker Compose..."
+docker-compose build --no-cache || { echo "❌ Falha ao fazer o build dos containers! Verifique os logs acima."; exit 1; }
+
 echo "🐳 Subindo containers com Docker Compose..."
-docker-compose up --build -d
+docker-compose up --build -d || { echo "❌ Falha ao subir os containers! Verifique os logs acima."; exit 1; }
 
 # Cria atalhos no sistema
 bash ./scripts/create_shortcuts.sh

@@ -3,6 +3,7 @@ version: '3.8'
 services:
   jupyterlab:
     build: ./services/jupyterlab
+    image: braindock/jupyterlab:latest
     ports:
       - "8888:8888"
     volumes:
@@ -90,17 +91,10 @@ services:
     volumes:
       - ./vectorstore:/faiss
 
-  braindock-hub:
-    build: ./services/brainhub
-    ports:
-      - "8501:8501"
-    environment:
-      - IMPORT_REPO=${IMPORT_REPO}
-    volumes:
-      - ./services/shared_module:/app/shared_module
+    
 
   python-shell:
-    image: jupyterlab
+    image: jupyterlab:latest
     container_name: python-shell
     tty: true
     stdin_open: true
@@ -114,6 +108,22 @@ services:
       - USE_GPU=${USE_GPU}
     depends_on:
       - jupyterlab
+
+  braindock-hub:
+      image: jupyterlab:latest  # Reutiliza a imagem do python-shell
+      container_name: braindock-hub
+      command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+      ports:
+        - "8501:8501"
+      volumes:
+        - ./services/shared_module:/app/shared_module
+        - ./services/brainhub:/app/brainhub
+      environment:
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
+        - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
+        - IMPORT_REPO=${IMPORT_REPO}
+      depends_on:
+        - jupyterlab
 
 volumes:
   clickhouse_data:
