@@ -5,10 +5,12 @@ from datetime import datetime
 @task
 def rodar_notebook(input_path: str, output_path: str, parameters: dict = {}):
     pm.execute_notebook(
-        input_path=input_path,
-        output_path=output_path,
-        parameters=parameters
-    )
+    input_path=input_path,
+    output_path=output_path,
+    parameters=parameters,
+    kernel_name="python"  # ou o nome exato do seu kernel
+)
+
 
 @flow(name="Fluxo_Notebook_Jupyter")
 def executar_notebook():

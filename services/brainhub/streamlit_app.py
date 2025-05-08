@@ -68,7 +68,7 @@ if st.button("Abrir Terminal Python (docker exec)"):
     st.code("docker exec -it python-shell bash")
 
 if st.button("Executar fluxo Prefect (Notebook)"):
-    os.system("python flows/run_notebook_flow.py")
+    os.system("python workflows/run_notebook_flow.py")
     st.success("Fluxo executado com sucesso. Verifique a pasta outputs/.")
 
 if st.button("Agendar fluxo Prefect diário (Notebook)"):

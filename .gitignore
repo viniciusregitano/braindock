@@ -2,7 +2,7 @@
 .env
 
 # Ignorar notebooks na pasta notebooks/no_git
-notebooks/git_ignored/
+notebooks/git_ignored/*
 
-tmp/
-outputs/
+tmp/*
+outputs/*
