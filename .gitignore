@@ -1,9 +1,40 @@
-# Ignorar o arquivo .env
-.env
-
-# Ignorar notebooks na pasta notebooks/no_git
-notebooks/git_ignored/*
-
-tmp/*
-outputs/*
+# Ambientes virtuais locais
+.venv/
 .venv-panel/
+env/
+venv/
+
+# Arquivos de ambiente e configuração local
+.env
+.env.*
+
+# Cache e metadados Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Notebooks temporários
+notebooks/git_ignored/*
+notebooks/no_git/*
+tmp/
+outputs/
+
+# Dados locais e rastreamento ML
+mlruns/
+*.db
+*.sqlite3
+
+# Arquivos do VSCode e sistema
+.vscode/
+.DS_Store
+*.swp
+
+# Logs e cache
+*.log
+*.bak
+*.tmp
+.cache/
