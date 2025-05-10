@@ -6,3 +6,4 @@ notebooks/git_ignored/*
 
 tmp/*
 outputs/*
+.venv-panel/
