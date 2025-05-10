@@ -55,6 +55,9 @@ deactivate
 echo "🐳 Fazendo build dos containers com Docker Compose..."
 docker-compose build || { echo "❌ Falha ao fazer o build dos containers! Verifique os logs acima."; exit 1; }
 
+# Inicializa o Superset (criação de usuário admin)
+bash ./scripts/init_superset.sh
+
 # Criar atalhos de sistema
 bash ./scripts/create_shortcuts.sh
 
