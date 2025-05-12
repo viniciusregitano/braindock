@@ -11,10 +11,12 @@ services:
       - ./services/shared_module:/app
       - .:/app # Monta o diretório atual no container
     working_dir: /app
+    env_file: .env
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token=''
 
   superset:
     image: apache/superset:latest
@@ -67,6 +69,7 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
+    env_file: .env
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH}
     healthcheck:
@@ -96,6 +99,7 @@ services:
     environment:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=minio123
+    env_file: .env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
       interval: 10s
@@ -124,6 +128,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    env_file: .env
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
